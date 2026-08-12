@@ -1,0 +1,14 @@
+{
+  "name": "discord-de-pobre",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "wrangler": "^4.0.0",
+    "@cloudflare/workers-types": "^5.20260808.1"
+  }
+}

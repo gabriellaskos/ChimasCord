@@ -1,0 +1,17 @@
+# Dependências
+node_modules/
+
+# Estado local do Wrangler (cache, sessões de dev)
+.wrangler/
+
+# Variáveis de ambiente / segredos (se um dia usar)
+.dev.vars
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema
+.DS_Store
+Thumbs.db

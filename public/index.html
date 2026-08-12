@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Discord de Pobre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-rail: #1e1f22;
+    --bg-sidebar: #2b2d31;
+    --bg-app: #313338;
+    --bg-elevated: #232428;
+    --bg-hover: #35373c;
+    --bg-active: #404249;
+    --accent: #5865f2;
+    --accent-hover: #4752c4;
+    --text-primary: #f2f3f5;
+    --text-muted: #949ba4;
+    --text-heading: #96989d;
+    --green: #23a55a;
+    --red: #f23f42;
+    --divider: #1f2023;
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg-rail);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ---------- Tela de login ---------- */
+  #loginScreen {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 30% 20%, #3a3f8a 0%, var(--bg-rail) 55%);
+  }
+  .login-card {
+    background: var(--bg-app);
+    padding: 32px 28px;
+    border-radius: 12px;
+    width: 320px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+  }
+  .login-card h1 {
+    margin: 0 0 4px;
+    font-size: 1.4rem;
+  }
+  .login-card p {
+    margin: 0 0 20px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  .field-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-heading);
+    margin-bottom: 6px;
+    display: block;
+  }
+  input[type="text"] {
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--divider);
+    border-radius: 4px;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: inherit;
+    margin-bottom: 18px;
+  }
+  input[type="text"]:focus { outline: 2px solid var(--accent); }
+
+  button.primary {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 11px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.primary:hover { background: var(--accent-hover); }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ---------- App principal ---------- */
+  #app { display: none; height: 100vh; }
+  #app.visible { display: flex; }
+
+  /* trilho de "servidor" */
+  #rail {
+    width: 72px;
+    background: var(--bg-rail);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 12px;
+    flex-shrink: 0;
+  }
+  .server-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+  }
+
+  /* lista de canais */
+  #channelSidebar {
+    width: 240px;
+    background: var(--bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .sidebar-header {
+    padding: 16px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border-bottom: 1px solid var(--divider);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.15);
+  }
+  .channel-list {
+    flex: 1;
+    padding: 16px 8px;
+    overflow-y: auto;
+  }
+  .channel-group-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-heading);
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+  .channel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 1px;
+  }
+  .channel:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .channel.active { background: var(--bg-active); color: var(--text-primary); }
+  .channel .icon { opacity: 0.7; font-size: 0.85rem; }
+  .channel-members {
+    padding-left: 26px;
+    margin-bottom: 6px;
+  }
+  .channel-member-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  .channel-member-row .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+    flex-shrink: 0;
+  }
+  #addChannelForm {
+    display: flex;
+    gap: 4px;
+    padding: 0 8px;
+    margin-top: 4px;
+  }
+  #addChannelForm input {
+    flex: 1;
+    background: var(--bg-elevated);
+    border: 1px solid var(--divider);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    padding: 6px 8px;
+    font-family: inherit;
+  }
+  #addChannelForm button {
+    background: var(--bg-elevated);
+    border: 1px solid var(--divider);
+    color: var(--text-muted);
+    border-radius: 4px;
+    padding: 0 10px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* barra de usuario no rodape */
+  #userBar {
+    background: var(--bg-elevated);
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #userBar .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+  }
+  #userBar .who { flex: 1; overflow: hidden; }
+  #userBar .who .name { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #userBar .who .sub { font-size: 0.7rem; color: var(--text-muted); }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .icon-btn.toggled-off { color: var(--red); }
+
+  /* area principal */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-app);
+    min-width: 0;
+  }
+  #mainHeader {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--divider);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  #mainHeader .icon { color: var(--text-muted); margin-right: 6px; }
+  #mainHeader .status {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  #mainBody {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px;
+  }
+
+  #emptyState {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    text-align: center;
+    gap: 8px;
+  }
+  #emptyState .big { font-size: 2.5rem; }
+  #emptyState h2 { color: var(--text-primary); margin: 4px 0 0; }
+  #emptyState p { margin: 0; font-size: 0.9rem; max-width: 320px; }
+
+  #participants {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+  }
+  .participant {
+    background: var(--bg-elevated);
+    border-radius: var(--radius);
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+  }
+  .participant .avatar-ring {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 3px solid transparent;
+    transition: border-color 80ms ease;
+  }
+  .participant.speaking .avatar-ring { border-color: var(--green); }
+  .participant .avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 700;
+  }
+  .participant .pname {
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .participant .mic-off {
+    color: var(--red);
+    font-size: 0.8rem;
+  }
+
+  /* controles de chamada, flutuando embaixo do main quando conectado */
+  #callControls {
+    display: none;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    border-top: 1px solid var(--divider);
+    flex-shrink: 0;
+  }
+  #callControls.visible { display: flex; }
+  #callControls button {
+    background: var(--bg-elevated);
+    border: none;
+    color: var(--text-primary);
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.1rem;
+  }
+  #callControls button:hover { background: var(--bg-hover); }
+  #callControls button.off { color: var(--red); }
+  #callControls button.leave { background: var(--red); }
+  #callControls button.leave:hover { background: #d9363a; }
+</style>
+</head>
+<body>
+
+<!-- ---------- Tela de login ---------- -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>🎧 Discord de Pobre</h1>
+    <p>Chamadas de voz caseiras, rodando na Cloudflare, R$0.</p>
+    <label class="field-label" for="nameInput">Seu nome</label>
+    <input type="text" id="nameInput" placeholder="Como você quer aparecer" maxlength="30" />
+    <button class="primary" id="enterBtn">Entrar</button>
+  </div>
+</div>
+
+<!-- ---------- App ---------- -->
+<div id="app">
+  <div id="rail">
+    <div class="server-icon">🎧</div>
+  </div>
+
+  <div id="channelSidebar">
+    <div class="sidebar-header">Discord de Pobre</div>
+    <div class="channel-list" id="channelList">
+      <div class="channel-group-label">Canais de voz</div>
+      <!-- canais entram aqui via JS -->
+      <form id="addChannelForm">
+        <input type="text" id="newChannelInput" placeholder="+ criar canal" maxlength="24" />
+        <button type="submit">➕</button>
+      </form>
+    </div>
+    <div id="userBar">
+      <div class="avatar" id="myAvatar">?</div>
+      <div class="who">
+        <div class="name" id="myName">-</div>
+        <div class="sub" id="myStatus">Desconectado</div>
+      </div>
+      <button class="icon-btn" id="muteBtn" title="Mutar/Desmutar">🎙️</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="mainHeader">
+      <span class="icon">🔊</span>
+      <span id="currentChannelName">Nenhum canal</span>
+      <span class="status" id="connStatus"></span>
+    </div>
+    <div id="mainBody">
+      <div id="emptyState">
+        <div class="big">🎧</div>
+        <h2>Selecione um canal de voz</h2>
+        <p>Clique em um canal na barra lateral pra entrar direto na chamada — igualzinho ao Discord de verdade.</p>
+      </div>
+      <div id="participants" style="display:none;"></div>
+    </div>
+    <div id="callControls">
+      <button id="ccMute" title="Mutar">🎙️</button>
+      <button id="ccDeafen" title="Ensurdecer">🎧</button>
+      <button class="leave" id="ccLeave" title="Sair do canal">📞</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================= Config =================
+const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+const DEFAULT_CHANNELS = ["geral", "jogos", "trabalho"];
+
+// ================= Estado =================
+let myName = "";
+let channels = [...DEFAULT_CHANNELS];
+let currentChannel = null;
+let ws = null;
+let localStream = null;
+let muted = false;
+let deafened = false;
+
+// id -> { name, muted, pc, audioEl, analyser, speaking }
+const peers = new Map();
+
+// ================= Elementos =================
+const loginScreen = document.getElementById("loginScreen");
+const appEl = document.getElementById("app");
+const nameInput = document.getElementById("nameInput");
+const enterBtn = document.getElementById("enterBtn");
+
+const channelListEl = document.getElementById("channelList");
+const addChannelForm = document.getElementById("addChannelForm");
+const newChannelInput = document.getElementById("newChannelInput");
+
+const myAvatarEl = document.getElementById("myAvatar");
+const myNameEl = document.getElementById("myName");
+const myStatusEl = document.getElementById("myStatus");
+const muteBtn = document.getElementById("muteBtn");
+
+const currentChannelNameEl = document.getElementById("currentChannelName");
+const connStatusEl = document.getElementById("connStatus");
+const emptyStateEl = document.getElementById("emptyState");
+const participantsEl = document.getElementById("participants");
+
+const callControlsEl = document.getElementById("callControls");
+const ccMute = document.getElementById("ccMute");
+const ccDeafen = document.getElementById("ccDeafen");
+const ccLeave = document.getElementById("ccLeave");
+
+// ================= Helpers =================
+function initials(name) {
+  return name.trim().slice(0, 2).toUpperCase();
+}
+
+function renderChannelList() {
+  // limpa tudo antes do form de adicionar canal
+  [...channelListEl.querySelectorAll(".channel, .channel-members")].forEach((el) => el.remove());
+
+  for (const ch of channels) {
+    const row = document.createElement("div");
+    row.className = "channel" + (ch === currentChannel ? " active" : "");
+    row.innerHTML = `<span class="icon">🔊</span><span>${ch}</span>`;
+    row.addEventListener("click", () => joinChannel(ch));
+    channelListEl.insertBefore(row, addChannelForm);
+
+    if (ch === currentChannel) {
+      const membersBox = document.createElement("div");
+      membersBox.className = "channel-members";
+      membersBox.id = "membersBox";
+      channelListEl.insertBefore(membersBox, addChannelForm);
+    }
+  }
+  renderSidebarMembers();
+}
+
+function renderSidebarMembers() {
+  const box = document.getElementById("membersBox");
+  if (!box) return;
+  box.innerHTML = "";
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    const meRow = document.createElement("div");
+    meRow.className = "channel-member-row";
+    meRow.innerHTML = `<span class="dot"></span><span>${myName} (você)</span>`;
+    box.appendChild(meRow);
+  }
+  for (const [, p] of peers) {
+    const row = document.createElement("div");
+    row.className = "channel-member-row";
+    row.innerHTML = `<span class="dot"></span><span>${p.name}</span>`;
+    box.appendChild(row);
+  }
+}
+
+function renderParticipants() {
+  const hasCall = currentChannel !== null;
+  emptyStateEl.style.display = hasCall ? "none" : "flex";
+  participantsEl.style.display = hasCall ? "grid" : "none";
+  callControlsEl.classList.toggle("visible", hasCall);
+
+  if (!hasCall) return;
+
+  participantsEl.innerHTML = "";
+
+  // eu mesmo
+  participantsEl.appendChild(buildParticipantCard(myName, muted, false));
+
+  for (const [, p] of peers) {
+    participantsEl.appendChild(buildParticipantCard(p.name, p.muted, p.speaking, p.id));
+  }
+}
+
+function buildParticipantCard(name, isMuted, isSpeaking, id) {
+  const card = document.createElement("div");
+  card.className = "participant" + (isSpeaking ? " speaking" : "");
+  if (id) card.dataset.peerId = id;
+  card.innerHTML = `
+    <div class="avatar-ring"><div class="avatar">${initials(name)}</div></div>
+    <div class="pname">${name} ${isMuted ? '<span class="mic-off">🔇</span>' : ""}</div>
+  `;
+  return card;
+}
+
+function setStatus(text) {
+  connStatusEl.textContent = text;
+}
+
+// ================= Deteccao de "quem esta falando" =================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function attachSpeakingDetector(stream, onSpeakingChange) {
+  const source = audioCtx.createMediaStreamSource(stream);
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 512;
+  source.connect(analyser);
+  const data = new Uint8Array(analyser.frequencyBinCount);
+
+  let speaking = false;
+  function tick() {
+    analyser.getByteFrequencyData(data);
+    const avg = data.reduce((a, b) => a + b, 0) / data.length;
+    const nowSpeaking = avg > 12; // limiar simples
+    if (nowSpeaking !== speaking) {
+      speaking = nowSpeaking;
+      onSpeakingChange(speaking);
+    }
+    requestAnimationFrame(tick);
+  }
+  tick();
+  return analyser;
+}
+
+// ================= WebRTC =================
+async function createPeerConnection(peerId, isInitiator) {
+  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+
+  localStream.getTracks().forEach((track) => pc.addTrack(track, localStream));
+
+  pc.ontrack = (event) => {
+    const stream = event.streams[0];
+    let audioEl = document.getElementById(`audio-${peerId}`);
+    if (!audioEl) {
+      audioEl = document.createElement("audio");
+      audioEl.id = `audio-${peerId}`;
+      audioEl.autoplay = true;
+      document.body.appendChild(audioEl);
+    }
+    audioEl.srcObject = stream;
+    audioEl.muted = deafened;
+
+    const peer = peers.get(peerId);
+    if (peer) {
+      peer.audioEl = audioEl;
+      attachSpeakingDetector(stream, (speaking) => {
+        const p = peers.get(peerId);
+        if (!p) return;
+        p.speaking = speaking;
+        const card = participantsEl.querySelector(`[data-peer-id="${peerId}"]`);
+        if (card) card.classList.toggle("speaking", speaking);
+      });
+    }
+  };
+
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      sendSignal(peerId, { type: "ice-candidate", candidate: event.candidate });
+    }
+  };
+
+  if (isInitiator) {
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    sendSignal(peerId, { type: "offer", sdp: offer });
+  }
+
+  return pc;
+}
+
+function sendSignal(to, data) {
+  ws.send(JSON.stringify({ type: "signal", to, data }));
+}
+
+// ================= Conexao com a sala =================
+async function joinChannel(channelName) {
+  if (currentChannel === channelName) return;
+  if (currentChannel) leaveChannel();
+
+  currentChannel = channelName;
+  currentChannelNameEl.textContent = channelName;
+  setStatus("Conectando...");
+  renderChannelList();
+  renderParticipants();
+
+  try {
+    if (!localStream) {
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localStream.getAudioTracks().forEach((t) => (t.enabled = !muted));
+      attachSpeakingDetector(localStream, (speaking) => {
+        const card = participantsEl.querySelector(".participant:first-child");
+        if (card) card.classList.toggle("speaking", speaking && !muted);
+      });
+    }
+  } catch (err) {
+    setStatus("Erro: libere o microfone");
+    return;
+  }
+
+  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  const url = `${protocol}//${location.host}/room/${encodeURIComponent(channelName)}?name=${encodeURIComponent(myName)}`;
+  ws = new WebSocket(url);
+
+  ws.addEventListener("open", () => {
+    setStatus("Conectado");
+  });
+
+  ws.addEventListener("close", () => {
+    setStatus("Desconectado");
+  });
+
+  ws.addEventListener("message", async (event) => {
+    const msg = JSON.parse(event.data);
+
+    if (msg.type === "room-users") {
+      for (const u of msg.users) {
+        peers.set(u.id, { id: u.id, name: u.name, muted: u.muted, pc: null, speaking: false });
+      }
+      renderParticipants();
+      renderSidebarMembers();
+      for (const u of msg.users) {
+        const pc = await createPeerConnection(u.id, true);
+        peers.get(u.id).pc = pc;
+      }
+    } else if (msg.type === "user-joined") {
+      peers.set(msg.id, { id: msg.id, name: msg.name, muted: msg.muted, pc: null, speaking: false });
+      renderParticipants();
+      renderSidebarMembers();
+      const pc = await createPeerConnection(msg.id, false);
+      peers.get(msg.id).pc = pc;
+    } else if (msg.type === "user-left") {
+      const p = peers.get(msg.id);
+      if (p) {
+        p.pc?.close();
+        p.audioEl?.remove();
+      }
+      peers.delete(msg.id);
+      renderParticipants();
+      renderSidebarMembers();
+    } else if (msg.type === "status") {
+      const p = peers.get(msg.id);
+      if (p) {
+        p.muted = msg.muted;
+        renderParticipants();
+      }
+    } else if (msg.type === "signal") {
+      const { from, data } = msg;
+      let peer = peers.get(from);
+      let pc = peer?.pc;
+
+      if (data.type === "offer") {
+        if (!pc) {
+          pc = await createPeerConnection(from, false);
+          if (peer) peer.pc = pc;
+        }
+        await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        sendSignal(from, { type: "answer", sdp: answer });
+      } else if (data.type === "answer" && pc) {
+        await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+      } else if (data.type === "ice-candidate" && pc) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+        } catch (err) {
+          console.error("Erro ICE candidate", err);
+        }
+      }
+    }
+  });
+}
+
+function leaveChannel() {
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+  for (const [, p] of peers) {
+    p.pc?.close();
+    p.audioEl?.remove();
+  }
+  peers.clear();
+  currentChannel = null;
+  setStatus("");
+  renderChannelList();
+  renderParticipants();
+}
+
+// ================= Controles =================
+function toggleMute(force) {
+  muted = force !== undefined ? force : !muted;
+  if (localStream) {
+    localStream.getAudioTracks().forEach((t) => (t.enabled = !muted));
+  }
+  muteBtn.textContent = muted ? "🔇" : "🎙️";
+  muteBtn.classList.toggle("toggled-off", muted);
+  ccMute.textContent = muted ? "🔇" : "🎙️";
+  ccMute.classList.toggle("off", muted);
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "status", muted }));
+  }
+  renderParticipants();
+}
+
+function toggleDeafen() {
+  deafened = !deafened;
+  ccDeafen.textContent = deafened ? "🔕" : "🎧";
+  ccDeafen.classList.toggle("off", deafened);
+  for (const [, p] of peers) {
+    if (p.audioEl) p.audioEl.muted = deafened;
+  }
+  // ensurdecer tambem muta o proprio microfone, como no Discord de verdade
+  if (deafened && !muted) toggleMute(true);
+}
+
+muteBtn.addEventListener("click", () => toggleMute());
+ccMute.addEventListener("click", () => toggleMute());
+ccDeafen.addEventListener("click", toggleDeafen);
+ccLeave.addEventListener("click", leaveChannel);
+
+addChannelForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = newChannelInput.value.trim().toLowerCase().replace(/\s+/g, "-");
+  if (name && !channels.includes(name)) {
+    channels.push(name);
+    renderChannelList();
+  }
+  newChannelInput.value = "";
+});
+
+// ================= Login =================
+function enterApp() {
+  const name = nameInput.value.trim();
+  if (!name) return;
+  myName = name;
+  myAvatarEl.textContent = initials(name);
+  myNameEl.textContent = name;
+  myStatusEl.textContent = "Online";
+  loginScreen.style.display = "none";
+  appEl.classList.add("visible");
+  renderChannelList();
+}
+
+enterBtn.addEventListener("click", enterApp);
+nameInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") enterApp();
+});
+nameInput.focus();
+</script>
+</body>
+</html>
